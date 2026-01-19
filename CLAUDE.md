@@ -90,6 +90,16 @@ Le script est organisé en fonctions modulaires:
   - Extrait: Rang, Dossard, Nom, Année, Classe, Club, Temps, Écart
   - Convertit automatiquement les points en virgules pour les décimales
 
+#### Fonctions de calcul
+- `convertir_temps_en_secondes(temps_str)` : Convertit temps en secondes
+  - Gère formats: `SS,cc` et `MM:SS,cc`
+  - Retourne float ou None
+
+- `calculer_note(temps_secondes, ecart_secondes)` : Calcule la note en %
+  - Formule: `(1 - écart/temps) × 100`
+  - Retourne float ou None
+  - Exemples: 0 sec d'écart = 100%, 2,49 sec sur 40,07 sec = 93,79%
+
 #### Fonctions de traitement
 - `traiter_pdf(chemin_pdf)` : Traite un fichier PDF complet
   - Utilise `pdfplumber` pour extraire le texte
@@ -110,8 +120,9 @@ Le script est organisé en fonctions modulaires:
 - `generer_csv(donnees_course, fichier_sortie)` : Génère le fichier CSV
   - Séparateur: point-virgule (`;`)
   - Encodage: UTF-8 avec BOM (utf-8-sig) pour compatibilité Excel
-  - 11 colonnes (sans: Heure de début, Classe, Fichier source)
-  - Nouvelle colonne: "Temps (secondes)" avec conversion automatique
+  - 12 colonnes (sans: Heure de début, Classe, Fichier source)
+  - Colonne "Temps (secondes)": conversion automatique
+  - Colonne "Note": calcul de pourcentage (1 - écart/temps) × 100
   - Une ligne par résultat de compétiteur
   - Fichier créé dans le même répertoire que le PDF source
   - Gestion correcte des caractères accentués
@@ -134,10 +145,10 @@ Les PDFs doivent suivre le format standard SKIBEC/SQA:
 
 ### Format de sortie (CSV)
 ```
-Date;Lieu;Type de compétition;Rang;Dossard;Nom;Année;Club;Temps;Temps (secondes);Écart
+Date;Lieu;Type de compétition;Rang;Dossard;Nom;Année;Club;Temps;Temps (secondes);Écart;Note
 ```
 
-**11 colonnes** (retirées: Heure de début, Classe, Fichier source)
+**12 colonnes** (retirées: Heure de début, Classe, Fichier source)
 
 **Important**:
 - Les décimales utilisent la virgule (`,`) et non le point (`.`)
@@ -145,9 +156,12 @@ Date;Lieu;Type de compétition;Rang;Dossard;Nom;Année;Club;Temps;Temps (seconde
   - Temps en minutes: `1:02,92` au lieu de `1:02.92`
 - Encodage: UTF-8 avec BOM pour compatibilité Excel
 - Les caractères accentués (é, è, à, etc.) sont correctement encodés
-- **Nouvelle colonne "Temps (secondes)"**: Conversion automatique des temps
+- **Colonne "Temps (secondes)"**: Conversion automatique des temps
   - `36,12` → `36,12` (déjà en secondes)
   - `1:02,92` → `62,92` (1 min * 60 + 2,92 sec)
+- **Colonne "Note"**: Calcul automatique du pourcentage de performance
+  - Formule: `(1 - écart/temps) × 100`
+  - Exemple: temps=40,07 sec, écart=2,49 sec → note=93,79%
 
 ## Conventions de codage
 

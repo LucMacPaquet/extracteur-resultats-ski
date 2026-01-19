@@ -83,6 +83,36 @@ def convertir_temps_en_secondes(temps_str):
         return None
 
 
+def calculer_note(temps_secondes, ecart_secondes):
+    """Calcule la note en pourcentage basée sur l'écart par rapport au temps
+
+    La formule est: (1 - écart/temps) * 100
+
+    Exemples:
+        temps=40.07, écart=2.49 -> 93.79%
+        temps=37.58, écart=0.00 -> 100.00%
+        temps=62.92, écart=25.34 -> 59.71%
+
+    Args:
+        temps_secondes: Temps du participant en secondes
+        ecart_secondes: Écart avec le premier en secondes
+
+    Returns:
+        float: Note en pourcentage, ou None si calcul impossible
+    """
+    if temps_secondes is None or ecart_secondes is None:
+        return None
+
+    if temps_secondes <= 0:
+        return None
+
+    try:
+        note = (1 - (ecart_secondes / temps_secondes)) * 100
+        return note
+    except Exception as e:
+        return None
+
+
 def extraire_resultats(texte):
     """Extrait les résultats des compétiteurs depuis le texte"""
     resultats = []
@@ -204,24 +234,34 @@ def generer_csv(donnees_course, fichier_sortie):
     with open(fichier_sortie, 'w', newline='', encoding='utf-8-sig') as csvfile:
         writer = csv.writer(csvfile, delimiter=';')
 
-        # En-tête (avec nouvelle colonne "Temps (secondes)")
+        # En-tête (avec colonnes "Temps (secondes)" et "Note")
         writer.writerow([
             'Date', 'Lieu', 'Type de compétition',
             'Rang', 'Dossard', 'Nom', 'Année', 'Club',
-            'Temps', 'Temps (secondes)', 'Écart'
+            'Temps', 'Temps (secondes)', 'Écart', 'Note'
         ])
 
         # Données
         if donnees_course and donnees_course['resultats']:
             for resultat in donnees_course['resultats']:
-                # Convertir le temps en secondes
+                # Convertir le temps et l'écart en secondes
                 temps_secondes = convertir_temps_en_secondes(resultat['temps'])
+                ecart_secondes = convertir_temps_en_secondes(resultat['ecart'])
 
-                # Formater avec virgule pour le CSV
+                # Formater temps avec virgule pour le CSV
                 if temps_secondes is not None:
                     temps_secondes_str = f"{temps_secondes:.2f}".replace('.', ',')
                 else:
                     temps_secondes_str = ""
+
+                # Calculer la note
+                note = calculer_note(temps_secondes, ecart_secondes)
+
+                # Formater note avec virgule et symbole %
+                if note is not None:
+                    note_str = f"{note:.2f}".replace('.', ',') + "%"
+                else:
+                    note_str = ""
 
                 writer.writerow([
                     donnees_course['date'],
@@ -234,7 +274,8 @@ def generer_csv(donnees_course, fichier_sortie):
                     resultat['club'],
                     resultat['temps'],
                     temps_secondes_str,
-                    resultat['ecart']
+                    resultat['ecart'],
+                    note_str
                 ])
 
     print(f"✓ Fichier CSV généré avec succès: {fichier_sortie}")

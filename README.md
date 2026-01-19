@@ -27,6 +27,7 @@ Le script extrait les informations suivantes pour chaque course:
 - **Temps**: Temps réalisé (format original: 36,16 ou 1:02,92)
 - **Temps (secondes)**: Temps converti en secondes (36,16 ou 62,92)
 - **Écart**: Écart avec le premier (format avec virgule)
+- **Note**: Pourcentage calculé avec la formule: (1 - écart/temps) × 100
 
 ## Installation
 
@@ -145,13 +146,13 @@ Le fichier CSV généré utilise:
 ### Exemple de contenu
 
 ```csv
-Date;Lieu;Type de compétition;Rang;Dossard;Nom;Année;Club;Temps;Temps (secondes);Écart
-Dimanche 1/18/2026;STONEHAM;GRANDS CIRCUITS SLALOM 1 - SLALOM FÉMININ;1;38;Léa, Doyon;2014;REL;37,58;37,58;0,00
-Dimanche 1/18/2026;STONEHAM;GRANDS CIRCUITS SLALOM 1 - SLALOM FÉMININ;2;15;Mélya, Ménard;2015;REL;40,07;40,07;2,49
-Dimanche 1/18/2026;STONEHAM;GRANDS CIRCUITS SLALOM 1 - SLALOM FÉMININ;48;12;Alice, Pronovost;2015;MASS;1:02,92;62,92;25,34
+Date;Lieu;Type de compétition;Rang;Dossard;Nom;Année;Club;Temps;Temps (secondes);Écart;Note
+Dimanche 1/18/2026;STONEHAM;GRANDS CIRCUITS SLALOM 1 - SLALOM FÉMININ;1;38;Léa, Doyon;2014;REL;37,58;37,58;0,00;100,00%
+Dimanche 1/18/2026;STONEHAM;GRANDS CIRCUITS SLALOM 1 - SLALOM FÉMININ;2;15;Mélya, Ménard;2015;REL;40,07;40,07;2,49;93,79%
+Dimanche 1/18/2026;STONEHAM;GRANDS CIRCUITS SLALOM 1 - SLALOM FÉMININ;48;12;Alice, Pronovost;2015;MASS;1:02,92;62,92;25,34;59,73%
 ```
 
-**Colonnes (11 au total):**
+**Colonnes (12 au total):**
 1. Date
 2. Lieu
 3. Type de compétition
@@ -161,8 +162,9 @@ Dimanche 1/18/2026;STONEHAM;GRANDS CIRCUITS SLALOM 1 - SLALOM FÉMININ;48;12;Ali
 7. Année
 8. Club
 9. Temps (format original MM:SS,cc ou SS,cc)
-10. Temps (secondes) - **Nouvelle colonne!**
+10. Temps (secondes)
 11. Écart
+12. Note - **Nouvelle colonne!**
 
 ### Conversion automatique des temps
 
@@ -171,7 +173,18 @@ La colonne "Temps (secondes)" convertit automatiquement tous les temps en second
 - `1:02,30` (1 minute 2,30 sec) → `62,30` secondes
 - `1:23,45` (1 minute 23,45 sec) → `83,45` secondes
 
-Cela facilite les calculs et analyses dans Excel ou autres outils.
+### Calcul automatique de la note
+
+La colonne "Note" calcule le pourcentage de performance par rapport au meilleur temps:
+
+**Formule:** `Note = (1 - écart/temps) × 100`
+
+**Exemples:**
+- Temps: 37,58 sec, Écart: 0,00 sec → Note: **100,00%** (premier)
+- Temps: 40,07 sec, Écart: 2,49 sec → Note: **93,79%**
+- Temps: 62,92 sec, Écart: 25,34 sec → Note: **59,73%**
+
+Cette note permet de comparer facilement les performances entre les participants.
 
 ## Ouverture du fichier CSV
 
