@@ -281,45 +281,49 @@ def generer_csv(donnees_course, fichier_sortie):
     print(f"✓ Fichier CSV généré avec succès: {fichier_sortie}")
 
 
-def main():
-    """Fonction principale"""
-    print("=" * 70)
-    print("EXTRACTEUR DE RÉSULTATS DE COURSES DE SKI")
-    print("=" * 70)
+def lister_pdfs_dossier(chemin_dossier):
+    """Liste tous les fichiers PDF dans un dossier (récursivement)
 
-    # Vérifier les arguments de ligne de commande
-    if len(sys.argv) < 2:
-        print("\nUsage: python3 extracteur_resultats.py <fichier_pdf>")
-        print("\nExemple:")
-        print("  python3 extracteur_resultats.py courses/Sl-Stoneham/298137\\ Race\\ Results.pdf")
-        print("  python3 extracteur_resultats.py \"courses/Sl-Stoneham/298137 Race Results.pdf\"")
-        sys.exit(1)
+    Args:
+        chemin_dossier: Path vers le dossier à scanner
 
-    # Récupérer le chemin du fichier PDF
-    chemin_pdf = Path(sys.argv[1])
+    Returns:
+        Liste de Path vers les fichiers PDF trouvés
+    """
+    pdfs = []
 
-    # Vérifier que le fichier existe
-    if not chemin_pdf.exists():
-        print(f"\n❌ Erreur: Le fichier '{chemin_pdf}' n'existe pas.")
-        sys.exit(1)
+    # Recherche récursive de tous les PDFs
+    for pdf in chemin_dossier.rglob('*.pdf'):
+        if pdf.is_file():
+            pdfs.append(pdf)
 
-    # Vérifier que c'est bien un fichier PDF
-    if chemin_pdf.suffix.lower() != '.pdf':
-        print(f"\n❌ Erreur: Le fichier doit être un PDF (.pdf)")
-        sys.exit(1)
+    # Trier par nom pour un traitement cohérent
+    pdfs.sort()
 
-    print(f"\nFichier à traiter: {chemin_pdf}\n")
+    return pdfs
+
+
+def traiter_fichier_unique(chemin_pdf):
+    """Traite un seul fichier PDF
+
+    Args:
+        chemin_pdf: Path vers le fichier PDF
+
+    Returns:
+        True si succès, False sinon
+    """
+    print(f"\nTraitement de {chemin_pdf}...")
 
     # Traiter le PDF
     donnees = traiter_pdf(chemin_pdf)
 
     if not donnees:
-        print("\n❌ Erreur: Impossible d'extraire les données du PDF.")
-        sys.exit(1)
+        print(f"  ❌ Impossible d'extraire les données")
+        return False
 
     if not donnees['resultats']:
-        print("\n⚠️  Aucun résultat extrait du PDF.")
-        sys.exit(1)
+        print(f"  ⚠️  Aucun résultat extrait")
+        return False
 
     print(f"  ✓ {len(donnees['resultats'])} résultats extraits")
 
@@ -333,9 +337,117 @@ def main():
     # Générer le CSV
     generer_csv(donnees, chemin_csv)
 
-    print(f"\n✅ Traitement terminé!")
-    print(f"📁 Répertoire: {repertoire_source}")
-    print(f"📄 Fichier CSV: {nom_csv}")
+    return True
+
+
+def main():
+    """Fonction principale"""
+    print("=" * 70)
+    print("EXTRACTEUR DE RÉSULTATS DE COURSES DE SKI")
+    print("=" * 70)
+
+    # Vérifier les arguments de ligne de commande
+    if len(sys.argv) < 2:
+        print("\nUsage: python3 extracteur_resultats.py <fichier_pdf_ou_dossier>")
+        print("\nExemples:")
+        print("  # Traiter un seul fichier PDF:")
+        print("  python3 extracteur_resultats.py \"courses/Sl-Stoneham/298137 Race Results.pdf\"")
+        print("\n  # Traiter tous les PDFs d'un dossier:")
+        print("  python3 extracteur_resultats.py courses/Sl-Stoneham")
+        print("  python3 extracteur_resultats.py courses")
+        sys.exit(1)
+
+    # Récupérer le chemin (fichier ou dossier)
+    chemin = Path(sys.argv[1])
+
+    # Vérifier que le chemin existe
+    if not chemin.exists():
+        print(f"\n❌ Erreur: Le chemin '{chemin}' n'existe pas.")
+        sys.exit(1)
+
+    # Cas 1: C'est un fichier PDF unique
+    if chemin.is_file():
+        # Vérifier que c'est bien un fichier PDF
+        if chemin.suffix.lower() != '.pdf':
+            print(f"\n❌ Erreur: Le fichier doit être un PDF (.pdf)")
+            sys.exit(1)
+
+        print(f"\nMode: Fichier unique")
+        print(f"Fichier: {chemin}\n")
+
+        succes = traiter_fichier_unique(chemin)
+
+        if succes:
+            print(f"\n✅ Traitement terminé!")
+            print(f"📁 Répertoire: {chemin.parent}")
+        else:
+            print(f"\n❌ Échec du traitement")
+            sys.exit(1)
+
+    # Cas 2: C'est un dossier
+    elif chemin.is_dir():
+        print(f"\nMode: Dossier")
+        print(f"Dossier: {chemin}")
+
+        # Lister tous les PDFs
+        pdfs = lister_pdfs_dossier(chemin)
+
+        if not pdfs:
+            print(f"\n⚠️  Aucun fichier PDF trouvé dans {chemin}")
+            sys.exit(1)
+
+        print(f"\n📄 {len(pdfs)} fichier(s) PDF trouvé(s):")
+        for pdf in pdfs:
+            print(f"  - {pdf.relative_to(chemin.parent)}")
+
+        print(f"\n{'=' * 70}")
+        print("DÉBUT DU TRAITEMENT")
+        print('=' * 70)
+
+        # Traiter chaque PDF
+        resultats = {
+            'succes': 0,
+            'echecs': 0,
+            'fichiers_succes': [],
+            'fichiers_echecs': []
+        }
+
+        for i, pdf in enumerate(pdfs, 1):
+            print(f"\n[{i}/{len(pdfs)}] {pdf.name}")
+
+            if traiter_fichier_unique(pdf):
+                resultats['succes'] += 1
+                resultats['fichiers_succes'].append(pdf.name)
+            else:
+                resultats['echecs'] += 1
+                resultats['fichiers_echecs'].append(pdf.name)
+
+        # Afficher le résumé
+        print(f"\n{'=' * 70}")
+        print("RÉSUMÉ DU TRAITEMENT")
+        print('=' * 70)
+        print(f"\n✅ Fichiers traités avec succès: {resultats['succes']}/{len(pdfs)}")
+
+        if resultats['fichiers_succes']:
+            print("\nFichiers CSV générés:")
+            for fichier in resultats['fichiers_succes']:
+                print(f"  ✓ {fichier}")
+
+        if resultats['echecs'] > 0:
+            print(f"\n❌ Fichiers en échec: {resultats['echecs']}/{len(pdfs)}")
+            if resultats['fichiers_echecs']:
+                print("\nFichiers non traités:")
+                for fichier in resultats['fichiers_echecs']:
+                    print(f"  ✗ {fichier}")
+
+        print(f"\n📁 Dossier de sortie: {chemin}")
+
+        if resultats['echecs'] > 0:
+            sys.exit(1)
+
+    else:
+        print(f"\n❌ Erreur: '{chemin}' n'est ni un fichier ni un dossier valide.")
+        sys.exit(1)
 
 
 if __name__ == '__main__':

@@ -20,8 +20,9 @@ Ce projet contient un script Python pour extraire automatiquement les résultats
 - 📄 Extraction automatique des données depuis des PDFs de résultats de courses générés par LiveTiming
 - 📊 Génération d'un fichier CSV avec toutes les informations pertinentes pour analyse dans Excel
 - 🇫🇷 Format décimal français (virgule au lieu de point)
-- 📁 Traitement par lots de tous les PDFs dans le répertoire `courses/`
+- 📁 **Traitement par dossier**: Traitez tous les PDFs d'un dossier en une seule commande (récursif)
 - 📈 Calcul automatique des temps en secondes et des notes de performance
+- 📋 Résumé détaillé du traitement avec liste des succès et échecs
 
 ## À propos des fichiers source (LiveTiming)
 
@@ -116,7 +117,9 @@ résultats/
 
 ### Exécution du script
 
-Le script s'utilise en ligne de commande en spécifiant le fichier PDF à traiter:
+Le script s'utilise en ligne de commande et accepte deux modes d'utilisation:
+
+#### Mode 1: Traiter un fichier PDF unique
 
 ```bash
 python3 extracteur_resultats.py <chemin_vers_fichier_pdf>
@@ -132,8 +135,87 @@ python3 extracteur_resultats.py "courses/Sl-Stoneham/298137 Race Results.pdf"
 python3 extracteur_resultats.py courses/Sl-Stoneham/298137\ Race\ Results.pdf
 ```
 
+**Sortie:**
+```
+Mode: Fichier unique
+Fichier: courses/Sl-Stoneham/298137 Race Results.pdf
+
+Traitement de courses/Sl-Stoneham/298137 Race Results.pdf...
+  ✓ 47 résultats extraits
+
+Génération du fichier CSV: courses/Sl-Stoneham/Stoneham_2026-01-18_Slalom1_F.csv
+✓ Fichier CSV généré avec succès
+
+✅ Traitement terminé!
+```
+
+#### Mode 2: Traiter tous les PDFs d'un dossier (NOUVEAU!)
+
+```bash
+python3 extracteur_resultats.py <chemin_vers_dossier>
+```
+
+**Exemples:**
+
+```bash
+# Traiter tous les PDFs du dossier Sl-Stoneham
+python3 extracteur_resultats.py courses/Sl-Stoneham
+
+# Traiter tous les PDFs de tous les sous-dossiers dans courses
+python3 extracteur_resultats.py courses
+```
+
+**Sortie:**
+```
+Mode: Dossier
+Dossier: courses/Sl-Stoneham
+
+📄 4 fichier(s) PDF trouvé(s):
+  - 298137 Race Results.pdf
+  - 298138 Race Results.pdf
+  - 298139 Race Results.pdf
+  - 298140 Race Results.pdf
+
+======================================================================
+DÉBUT DU TRAITEMENT
+======================================================================
+
+[1/4] 298137 Race Results.pdf
+  ✓ 47 résultats extraits
+  ✓ CSV généré
+
+[2/4] 298138 Race Results.pdf
+  ✓ 37 résultats extraits
+  ✓ CSV généré
+
+... (suite)
+
+======================================================================
+RÉSUMÉ DU TRAITEMENT
+======================================================================
+
+✅ Fichiers traités avec succès: 4/4
+
+Fichiers CSV générés:
+  ✓ 298137 Race Results.pdf → Stoneham_2026-01-18_Slalom1_F.csv
+  ✓ 298138 Race Results.pdf → Stoneham_2026-01-18_Slalom2_M.csv
+  ✓ 298139 Race Results.pdf → Stoneham_2026-01-18_Slalom2_F.csv
+  ✓ 298140 Race Results.pdf → Stoneham_2026-01-18_Slalom1_M.csv
+
+📁 Dossier de sortie: courses/Sl-Stoneham
+```
+
+**Avantages du mode dossier:**
+- ⚡ Traite tous les PDFs en une seule commande
+- 📊 Affiche un résumé complet du traitement
+- 🔍 Recherche récursive dans tous les sous-dossiers
+- ✅ Continue même si un fichier échoue
+- 📝 Liste les succès et échecs à la fin
+
+### Comment ça fonctionne
+
 Le script va:
-1. Lire et analyser le fichier PDF spécifié
+1. Lire et analyser le(s) fichier(s) PDF spécifié(s)
 2. Extraire les informations (date, lieu, type, résultats)
 3. Générer un fichier CSV avec un nom descriptif dans le **même répertoire** que le PDF source
 
@@ -166,19 +248,21 @@ Génération du fichier CSV: courses/Sl-Stoneham/Stoneham_2026-01-18_Slalom1_F.c
 📄 Fichier CSV: Stoneham_2026-01-18_Slalom1_F.csv
 ```
 
-### Traitement par lots
+### Ancienne méthode de traitement par lots (optionnelle)
 
-Pour traiter plusieurs PDFs, utilisez une boucle shell:
+Si vous préférez utiliser des boucles shell plutôt que le mode dossier intégré:
 
 ```bash
-# Traiter tous les PDFs dans un répertoire
+# Traiter tous les PDFs dans un répertoire (non récursif)
 for pdf in courses/Sl-Stoneham/*.pdf; do
     python3 extracteur_resultats.py "$pdf"
 done
 
-# Traiter tous les PDFs récursivement
+# Traiter tous les PDFs récursivement avec find
 find courses -name "*.pdf" -exec python3 extracteur_resultats.py {} \;
 ```
+
+**Note:** Le mode dossier intégré (voir ci-dessus) est maintenant recommandé car il offre un meilleur résumé et une meilleure gestion des erreurs.
 
 ## Format du fichier CSV pour Excel
 

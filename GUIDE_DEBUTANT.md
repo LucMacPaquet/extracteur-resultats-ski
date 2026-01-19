@@ -202,6 +202,10 @@ Maintenant que tout est installé, voici comment utiliser le script!
 
 ### Lancer le script
 
+Le script peut fonctionner de deux façons:
+
+#### Option A: Traiter un seul fichier PDF
+
 1. **Ouvrir le terminal** dans le dossier du projet (comme à l'étape 3)
 
 2. **Lancer la commande:**
@@ -221,6 +225,46 @@ Maintenant que tout est installé, voici comment utiliser le script!
 4. **C'est fait!** 🎉
    - Le fichier CSV est créé dans le même dossier que le PDF
    - Son nom sera quelque chose comme: `Stoneham_2026-01-18_Slalom1_F.csv`
+
+#### Option B: Traiter tous les PDFs d'un dossier (RECOMMANDÉ!)
+
+C'est la méthode la plus simple si vous avez plusieurs PDFs à traiter!
+
+1. **Ouvrir le terminal** dans le dossier du projet (comme à l'étape 3)
+
+2. **Lancer la commande avec le nom du dossier:**
+
+   **Windows:**
+   ```
+   python extracteur_resultats.py "courses\Sl-Stoneham"
+   ```
+
+   **Mac/Linux:**
+   ```bash
+   python3 extracteur_resultats.py courses/Sl-Stoneham
+   ```
+
+3. **Regarder la magie opérer!** ✨
+   - Le script trouve automatiquement tous les PDFs dans le dossier
+   - Il les traite un par un
+   - Il affiche sa progression: `[1/4] Traitement...`, `[2/4] Traitement...`
+   - À la fin, il affiche un résumé complet
+
+4. **Résultat:** 🎉
+   ```
+   ✅ Fichiers traités avec succès: 4/4
+
+   Fichiers CSV générés:
+     ✓ 298137 Race Results.pdf
+     ✓ 298138 Race Results.pdf
+     ✓ 298139 Race Results.pdf
+     ✓ 298140 Race Results.pdf
+   ```
+
+**Avantage de l'option B:**
+- Pas besoin de lancer la commande 10 fois pour 10 PDFs!
+- Un seul clic et tout est traité
+- Gain de temps énorme si vous avez beaucoup de courses
 
 ### Ouvrir le fichier CSV
 
