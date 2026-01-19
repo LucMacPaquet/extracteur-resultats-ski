@@ -1,0 +1,276 @@
+#!/usr/bin/env python3
+"""
+Script d'extraction des résultats de courses de ski depuis des PDFs
+Génère un fichier CSV avec les informations pertinentes
+Format décimal: virgule (,) au lieu de point (.)
+
+Usage: python3 extracteur_resultats.py <fichier_pdf>
+"""
+
+import pdfplumber
+import csv
+import re
+import sys
+from pathlib import Path
+from datetime import datetime
+
+
+def extraire_date(texte):
+    """Extrait la date du PDF"""
+    match = re.search(r'(Lundi|Mardi|Mercredi|Jeudi|Vendredi|Samedi|Dimanche)\s+(\d{1,2}/\d{1,2}/\d{4})', texte)
+    if match:
+        return f"{match.group(1)} {match.group(2)}"
+    return ""
+
+
+def extraire_lieu(texte):
+    """Extrait le lieu de la course"""
+    # Cherche STONEHAM ou autres lieux
+    if 'STONEHAM' in texte:
+        return 'STONEHAM'
+    return ""
+
+
+def extraire_type_competition(texte):
+    """Extrait le type de compétition"""
+    match1 = re.search(r'GRANDS CIRCUITS SLALOM \d+', texte)
+    match2 = re.search(r'SLALOM [A-ZÉÈÊ]+', texte)
+
+    if match1 and match2:
+        return f"{match1.group(0)} - {match2.group(0)}"
+    return ""
+
+
+def extraire_heure_debut(texte):
+    """Extrait l'heure de début"""
+    match = re.search(r'Heure de début[:\s]+(\d{1,2}:\d{2})', texte)
+    if match:
+        return match.group(1)
+    return ""
+
+
+def convertir_temps_en_secondes(temps_str):
+    """Convertit un temps au format MM:SS.cc ou SS.cc en secondes totales"""
+    if not temps_str or temps_str == '':
+        return None
+
+    try:
+        if ':' in temps_str:
+            # Format MM:SS.cc
+            parties = temps_str.split(':')
+            minutes = int(parties[0])
+            secondes = float(parties[1].replace('.', ','))
+            return minutes * 60 + secondes
+        else:
+            # Format SS.cc
+            return float(temps_str.replace('.', ','))
+    except:
+        return None
+
+
+def extraire_resultats(texte):
+    """Extrait les résultats des compétiteurs depuis le texte"""
+    resultats = []
+
+    # Pattern pour les lignes de résultats
+    # Format: Rang Dos Nom AN Classe Club NAT Heure Écart
+    # Le pattern capture: rang, dossard, nom (tout jusqu'à l'année), année, classe, club, temps, écart (optionnel)
+    pattern = r'^\s*(\d+)\s+(\d+)\s+(.+?)\s+(20\d{2})\s+([A-D])\s+([A-Z]+)\s+U12\s+([\d:,\.]+)(?:\s+([\d:,\.]+))?\s*$'
+
+    for ligne in texte.split('\n'):
+        match = re.match(pattern, ligne)
+        if match:
+            rang = match.group(1)
+            dossard = match.group(2)
+            nom = match.group(3).strip()
+            annee = match.group(4)
+            classe = match.group(5)
+            club = match.group(6)
+            temps = match.group(7)
+            ecart = match.group(8) if match.group(8) else "0.00"
+
+            # Convertir les points en virgules
+            temps = temps.replace('.', ',')
+            ecart = ecart.replace('.', ',')
+
+            resultats.append({
+                'rang': rang,
+                'dossard': dossard,
+                'nom': nom,
+                'annee': annee,
+                'classe': classe,
+                'club': club,
+                'temps': temps,
+                'ecart': ecart
+            })
+
+    return resultats
+
+
+def traiter_pdf(chemin_pdf):
+    """Traite un fichier PDF et extrait toutes les informations"""
+    print(f"Traitement de {chemin_pdf}...")
+
+    try:
+        with pdfplumber.open(chemin_pdf) as pdf:
+            # Extraire le texte de toutes les pages
+            texte_complet = ""
+            for page in pdf.pages:
+                texte_complet += page.extract_text() + "\n"
+
+            # Extraire les informations
+            date = extraire_date(texte_complet)
+            lieu = extraire_lieu(texte_complet)
+            type_competition = extraire_type_competition(texte_complet)
+            heure_debut = extraire_heure_debut(texte_complet)
+            resultats = extraire_resultats(texte_complet)
+
+            return {
+                'fichier': chemin_pdf.name,
+                'date': date,
+                'lieu': lieu,
+                'type_competition': type_competition,
+                'heure_debut': heure_debut,
+                'resultats': resultats
+            }
+    except Exception as e:
+        print(f"Erreur lors du traitement de {chemin_pdf}: {e}")
+        import traceback
+        traceback.print_exc()
+        return None
+
+
+def nettoyer_nom_fichier(texte):
+    """Nettoie une chaîne pour en faire un nom de fichier valide"""
+    # Remplacer les caractères invalides
+    texte = texte.replace('/', '-')
+    texte = texte.replace(':', '-')
+    texte = texte.replace(' ', '_')
+    texte = re.sub(r'[<>:"|?*]', '', texte)
+    return texte
+
+
+def generer_nom_fichier_csv(donnees_course):
+    """Génère un nom de fichier CSV basé sur lieu, date et épreuve"""
+    lieu = donnees_course.get('lieu', 'Course').replace('STONEHAM', 'Stoneham')
+
+    # Extraire juste la date sans le jour de la semaine
+    date_brute = donnees_course.get('date', '')
+    # Format: "Dimanche 1/18/2026" -> "2026-01-18"
+    match_date = re.search(r'(\d{1,2})/(\d{1,2})/(\d{4})', date_brute)
+    if match_date:
+        mois, jour, annee = match_date.groups()
+        date_formatee = f"{annee}-{mois.zfill(2)}-{jour.zfill(2)}"
+    else:
+        date_formatee = "date_inconnue"
+
+    # Extraire le numéro de slalom et le type
+    type_comp = donnees_course.get('type_competition', '')
+    match_slalom = re.search(r'SLALOM\s+(\d+)', type_comp)
+    match_type = re.search(r'SLALOM\s+(FÉMININ|MASCULIN|F[EÉ]MININ|M[AÂ]LE)', type_comp)
+
+    numero_slalom = f"Slalom{match_slalom.group(1)}" if match_slalom else "Slalom"
+    type_slalom = match_type.group(1).replace('FÉMININ', 'F').replace('MASCULIN', 'M') if match_type else ""
+
+    # Construire le nom: Lieu_Date_Slalom1_F.csv
+    nom = f"{lieu}_{date_formatee}_{numero_slalom}"
+    if type_slalom:
+        nom += f"_{type_slalom}"
+
+    nom = nettoyer_nom_fichier(nom)
+    return f"{nom}.csv"
+
+
+def generer_csv(donnees_course, fichier_sortie):
+    """Génère un fichier CSV avec les résultats d'une course"""
+    print(f"\nGénération du fichier CSV: {fichier_sortie}")
+
+    # Utiliser UTF-8 avec BOM pour meilleure compatibilité Excel
+    with open(fichier_sortie, 'w', newline='', encoding='utf-8-sig') as csvfile:
+        writer = csv.writer(csvfile, delimiter=';')
+
+        # En-tête (sans: Heure de début, Classe, Fichier source)
+        writer.writerow([
+            'Date', 'Lieu', 'Type de compétition',
+            'Rang', 'Dossard', 'Nom', 'Année', 'Club',
+            'Temps', 'Écart'
+        ])
+
+        # Données
+        if donnees_course and donnees_course['resultats']:
+            for resultat in donnees_course['resultats']:
+                writer.writerow([
+                    donnees_course['date'],
+                    donnees_course['lieu'],
+                    donnees_course['type_competition'],
+                    resultat['rang'],
+                    resultat['dossard'],
+                    resultat['nom'],
+                    resultat['annee'],
+                    resultat['club'],
+                    resultat['temps'],
+                    resultat['ecart']
+                ])
+
+    print(f"✓ Fichier CSV généré avec succès: {fichier_sortie}")
+
+
+def main():
+    """Fonction principale"""
+    print("=" * 70)
+    print("EXTRACTEUR DE RÉSULTATS DE COURSES DE SKI")
+    print("=" * 70)
+
+    # Vérifier les arguments de ligne de commande
+    if len(sys.argv) < 2:
+        print("\nUsage: python3 extracteur_resultats.py <fichier_pdf>")
+        print("\nExemple:")
+        print("  python3 extracteur_resultats.py courses/Sl-Stoneham/298137\\ Race\\ Results.pdf")
+        print("  python3 extracteur_resultats.py \"courses/Sl-Stoneham/298137 Race Results.pdf\"")
+        sys.exit(1)
+
+    # Récupérer le chemin du fichier PDF
+    chemin_pdf = Path(sys.argv[1])
+
+    # Vérifier que le fichier existe
+    if not chemin_pdf.exists():
+        print(f"\n❌ Erreur: Le fichier '{chemin_pdf}' n'existe pas.")
+        sys.exit(1)
+
+    # Vérifier que c'est bien un fichier PDF
+    if chemin_pdf.suffix.lower() != '.pdf':
+        print(f"\n❌ Erreur: Le fichier doit être un PDF (.pdf)")
+        sys.exit(1)
+
+    print(f"\nFichier à traiter: {chemin_pdf}\n")
+
+    # Traiter le PDF
+    donnees = traiter_pdf(chemin_pdf)
+
+    if not donnees:
+        print("\n❌ Erreur: Impossible d'extraire les données du PDF.")
+        sys.exit(1)
+
+    if not donnees['resultats']:
+        print("\n⚠️  Aucun résultat extrait du PDF.")
+        sys.exit(1)
+
+    print(f"  ✓ {len(donnees['resultats'])} résultats extraits")
+
+    # Générer le nom du fichier CSV
+    nom_csv = generer_nom_fichier_csv(donnees)
+
+    # Placer le CSV dans le même répertoire que le PDF source
+    repertoire_source = chemin_pdf.parent
+    chemin_csv = repertoire_source / nom_csv
+
+    # Générer le CSV
+    generer_csv(donnees, chemin_csv)
+
+    print(f"\n✅ Traitement terminé!")
+    print(f"📁 Répertoire: {repertoire_source}")
+    print(f"📄 Fichier CSV: {nom_csv}")
+
+
+if __name__ == '__main__':
+    main()
