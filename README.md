@@ -17,10 +17,42 @@ Ce projet contient un script Python pour extraire automatiquement les résultats
 
 ## Fonctionnalités
 
-- 📄 Extraction automatique des données depuis des PDFs de résultats de courses
-- 📊 Génération d'un fichier CSV avec toutes les informations pertinentes
+- 📄 Extraction automatique des données depuis des PDFs de résultats de courses générés par LiveTiming
+- 📊 Génération d'un fichier CSV avec toutes les informations pertinentes pour analyse dans Excel
 - 🇫🇷 Format décimal français (virgule au lieu de point)
 - 📁 Traitement par lots de tous les PDFs dans le répertoire `courses/`
+- 📈 Calcul automatique des temps en secondes et des notes de performance
+
+## À propos des fichiers source (LiveTiming)
+
+Ce script traite les fichiers PDF générés par les systèmes de chronométrage **LiveTiming** utilisés lors des compétitions de ski. Ces systèmes sont couramment utilisés par:
+
+- **SKIBEC** (Fédération de ski acrobatique du Québec)
+- **SQA** (Ski Québec Alpin)
+- Clubs de ski régionaux (Mont-Sainte-Anne, Stoneham, Relais, etc.)
+
+### Systèmes compatibles
+
+Le script est compatible avec les PDFs générés par:
+- **Split Second Ver. 8.08 Rev. 4** - Système de chronométrage professionnel
+- **TAG HEUER CP 540** - Chronométrage haute précision
+- **LiveTiming Race Results** - Format standard utilisé au Québec
+
+### Format typique des PDFs LiveTiming
+
+Les PDFs de résultats LiveTiming contiennent généralement:
+- **En-tête**: Date, lieu, type de compétition (ex: GRANDS CIRCUITS SLALOM 1)
+- **Catégorie**: Genre (Masculin/Féminin) et classe d'âge (U12, U14, etc.)
+- **Tableau de résultats**: Avec colonnes standardisées (Rang, Dossard, Nom, AN, Classe, Club, NAT, Temps, Écart)
+- **Métadonnées**: Heure de début, système de chronométrage, conditions météo
+
+### Où obtenir ces fichiers?
+
+Les fichiers PDF LiveTiming sont généralement disponibles:
+- Sur les sites web des clubs de ski après chaque course
+- Par courriel aux entraîneurs et officiels
+- Sur les plateformes de résultats en ligne (ex: live.skibec.ca)
+- Téléchargement direct depuis le système LiveTiming lors des événements
 
 ## Informations extraites
 
@@ -148,13 +180,38 @@ done
 find courses -name "*.pdf" -exec python3 extracteur_resultats.py {} \;
 ```
 
-## Format du fichier CSV
+## Format du fichier CSV pour Excel
 
-Le fichier CSV généré utilise:
-- **Séparateur**: point-virgule (`;`)
-- **Encodage**: UTF-8 avec BOM (meilleure compatibilité Excel)
-- **Format décimal**: virgule (`,`) au lieu de point (`.`)
-- **Caractères accentués**: Correctement encodés en UTF-8
+Le fichier CSV généré est optimisé pour une ouverture directe dans Excel avec les bons paramètres:
+
+### Spécifications techniques
+
+| Paramètre | Valeur | Raison |
+|-----------|--------|--------|
+| **Séparateur de colonnes** | Point-virgule (`;`) | Standard français/européen pour CSV |
+| **Séparateur décimal** | Virgule (`,`) | Format décimal français (37,58 au lieu de 37.58) |
+| **Encodage** | UTF-8 avec BOM | Assure l'affichage correct des accents (é, è, à, ô) dans Excel |
+| **Fin de ligne** | CRLF (`\r\n`) | Compatible Windows et Mac |
+| **Guillemets** | Aucun (sauf si nécessaire) | Fichier propre et lisible |
+
+### Pourquoi ces choix?
+
+**Point-virgule au lieu de virgule:**
+- En français, la virgule est le séparateur décimal (37,58)
+- Si on utilisait la virgule comme séparateur de colonnes, Excel ne pourrait pas distinguer entre "37,58" (un nombre) et "37,58" (deux colonnes)
+- Le point-virgule est le standard pour les CSV francophones
+
+**UTF-8 avec BOM:**
+- Le BOM (Byte Order Mark) est un marqueur invisible au début du fichier
+- Il indique à Excel que le fichier est en UTF-8
+- Sans le BOM, Excel pourrait interpréter les accents incorrectement
+- Avec le BOM, "Léa" s'affiche correctement au lieu de "LÃ©a"
+
+**Format décimal avec virgule:**
+- Respect des normes françaises et québécoises
+- Compatible avec les formules Excel en français
+- `=MOYENNE(J2:J50)` fonctionnera correctement avec 37,58
+- Cohérent avec le système d'exploitation configuré en français
 
 ### Exemple de contenu
 
@@ -165,19 +222,55 @@ Dimanche 1/18/2026;STONEHAM;GRANDS CIRCUITS SLALOM 1 - SLALOM FÉMININ;2;15;Mél
 Dimanche 1/18/2026;STONEHAM;GRANDS CIRCUITS SLALOM 1 - SLALOM FÉMININ;48;12;Alice, Pronovost;2015;MASS;1:02,92;62,92;25,34;59,73%
 ```
 
-**Colonnes (12 au total):**
-1. Date
-2. Lieu
-3. Type de compétition
-4. Rang
-5. Dossard
-6. Nom
-7. Année
-8. Club
-9. Temps (format original MM:SS,cc ou SS,cc)
-10. Temps (secondes)
-11. Écart
-12. Note - **Nouvelle colonne!**
+### Description détaillée des colonnes
+
+Le fichier CSV généré contient **12 colonnes** pour faciliter l'analyse dans Excel, Google Sheets ou tout autre tableur:
+
+| # | Colonne | Type | Description | Exemple |
+|---|---------|------|-------------|---------|
+| 1 | **Date** | Texte | Date complète de la compétition avec jour de la semaine | `Dimanche 1/18/2026` |
+| 2 | **Lieu** | Texte | Nom de la station de ski où s'est déroulée la course | `STONEHAM` |
+| 3 | **Type de compétition** | Texte | Description complète de l'épreuve et catégorie | `GRANDS CIRCUITS SLALOM 1 - SLALOM FÉMININ` |
+| 4 | **Rang** | Nombre | Position finale du compétiteur (1 = premier) | `1`, `2`, `48` |
+| 5 | **Dossard** | Nombre | Numéro de dossard porté pendant la course | `38`, `15`, `12` |
+| 6 | **Nom** | Texte | Prénom et nom du compétiteur (format: Prénom, Nom) | `Léa, Doyon` |
+| 7 | **Année** | Nombre | Année de naissance du compétiteur | `2014`, `2015` |
+| 8 | **Club** | Texte | Code du club d'appartenance (3-4 lettres) | `REL`, `MSA`, `STON`, `MASS` |
+| 9 | **Temps** | Texte | Temps original tel qu'affiché dans le PDF LiveTiming | `37,58` ou `1:02,92` |
+| 10 | **Temps (secondes)** | Nombre | Temps converti en secondes décimales pour calculs Excel | `37,58` ou `62,92` |
+| 11 | **Écart** | Nombre | Écart de temps avec le premier (en secondes) | `0,00`, `2,49`, `25,34` |
+| 12 | **Note** | Pourcentage | Performance relative calculée: (1 - écart/temps) × 100 | `100,00%`, `93,79%`, `59,73%` |
+
+### Utilisation des colonnes dans Excel
+
+**Pour l'analyse statistique:**
+- Utilisez **Temps (secondes)** pour calculer moyennes, médianes, écarts-types
+- Utilisez **Note** pour comparer les performances entre différentes courses
+- Triez par **Rang** pour voir le classement officiel
+- Triez par **Note** pour voir les meilleures performances relatives
+
+**Pour les filtres:**
+- Filtrez par **Lieu** pour analyser les résultats par station
+- Filtrez par **Club** pour voir les résultats d'un club spécifique
+- Filtrez par **Année** pour comparer les catégories d'âge (2014 vs 2015)
+
+**Pour les graphiques:**
+- Graphique en barres: **Nom** (axe X) vs **Note** (axe Y) pour visualiser les performances
+- Graphique temporel: **Date** (axe X) vs **Note** (axe Y) pour suivre la progression d'un athlète
+- Graphique de dispersion: **Temps (secondes)** vs **Écart** pour identifier les tendances
+
+### Codes de clubs courants
+
+Voici les codes des clubs de ski les plus fréquents dans les résultats:
+
+| Code | Club | Région |
+|------|------|--------|
+| **REL** | Le Relais | Lac-Beauport |
+| **MSA** | Mont-Sainte-Anne | Beaupré |
+| **STON** | Stoneham | Stoneham-et-Tewkesbury |
+| **MASS** | Massif de Charlevoix | Petite-Rivière-Saint-François |
+| **ADS** | Adstock | Adstock |
+| **MGF** | Mont-Grand-Fonds | La Malbaie |
 
 ### Conversion automatique des temps
 
