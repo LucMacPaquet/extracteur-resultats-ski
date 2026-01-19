@@ -50,21 +50,36 @@ def extraire_heure_debut(texte):
 
 
 def convertir_temps_en_secondes(temps_str):
-    """Convertit un temps au format MM:SS.cc ou SS.cc en secondes totales"""
+    """Convertit un temps au format MM:SS,cc ou SS,cc en secondes totales
+
+    Exemples:
+        "36,12" -> 36.12
+        "1:02,3" -> 62.3
+        "1:23,45" -> 83.45
+
+    Args:
+        temps_str: Chaîne représentant un temps (avec virgules pour décimales)
+
+    Returns:
+        float: Temps en secondes, ou None si conversion impossible
+    """
     if not temps_str or temps_str == '':
         return None
 
     try:
-        if ':' in temps_str:
+        # Remplacer virgule par point pour la conversion en float
+        temps_normalise = temps_str.replace(',', '.')
+
+        if ':' in temps_normalise:
             # Format MM:SS.cc
-            parties = temps_str.split(':')
+            parties = temps_normalise.split(':')
             minutes = int(parties[0])
-            secondes = float(parties[1].replace('.', ','))
+            secondes = float(parties[1])
             return minutes * 60 + secondes
         else:
-            # Format SS.cc
-            return float(temps_str.replace('.', ','))
-    except:
+            # Format SS.cc - déjà en secondes
+            return float(temps_normalise)
+    except Exception as e:
         return None
 
 
@@ -189,16 +204,25 @@ def generer_csv(donnees_course, fichier_sortie):
     with open(fichier_sortie, 'w', newline='', encoding='utf-8-sig') as csvfile:
         writer = csv.writer(csvfile, delimiter=';')
 
-        # En-tête (sans: Heure de début, Classe, Fichier source)
+        # En-tête (avec nouvelle colonne "Temps (secondes)")
         writer.writerow([
             'Date', 'Lieu', 'Type de compétition',
             'Rang', 'Dossard', 'Nom', 'Année', 'Club',
-            'Temps', 'Écart'
+            'Temps', 'Temps (secondes)', 'Écart'
         ])
 
         # Données
         if donnees_course and donnees_course['resultats']:
             for resultat in donnees_course['resultats']:
+                # Convertir le temps en secondes
+                temps_secondes = convertir_temps_en_secondes(resultat['temps'])
+
+                # Formater avec virgule pour le CSV
+                if temps_secondes is not None:
+                    temps_secondes_str = f"{temps_secondes:.2f}".replace('.', ',')
+                else:
+                    temps_secondes_str = ""
+
                 writer.writerow([
                     donnees_course['date'],
                     donnees_course['lieu'],
@@ -209,6 +233,7 @@ def generer_csv(donnees_course, fichier_sortie):
                     resultat['annee'],
                     resultat['club'],
                     resultat['temps'],
+                    temps_secondes_str,
                     resultat['ecart']
                 ])
 

@@ -110,7 +110,8 @@ Le script est organisé en fonctions modulaires:
 - `generer_csv(donnees_course, fichier_sortie)` : Génère le fichier CSV
   - Séparateur: point-virgule (`;`)
   - Encodage: UTF-8 avec BOM (utf-8-sig) pour compatibilité Excel
-  - 10 colonnes (sans: Heure de début, Classe, Fichier source)
+  - 11 colonnes (sans: Heure de début, Classe, Fichier source)
+  - Nouvelle colonne: "Temps (secondes)" avec conversion automatique
   - Une ligne par résultat de compétiteur
   - Fichier créé dans le même répertoire que le PDF source
   - Gestion correcte des caractères accentués
@@ -133,10 +134,10 @@ Les PDFs doivent suivre le format standard SKIBEC/SQA:
 
 ### Format de sortie (CSV)
 ```
-Date;Lieu;Type de compétition;Rang;Dossard;Nom;Année;Club;Temps;Écart
+Date;Lieu;Type de compétition;Rang;Dossard;Nom;Année;Club;Temps;Temps (secondes);Écart
 ```
 
-**10 colonnes** (retirées: Heure de début, Classe, Fichier source)
+**11 colonnes** (retirées: Heure de début, Classe, Fichier source)
 
 **Important**:
 - Les décimales utilisent la virgule (`,`) et non le point (`.`)
@@ -144,6 +145,9 @@ Date;Lieu;Type de compétition;Rang;Dossard;Nom;Année;Club;Temps;Écart
   - Temps en minutes: `1:02,92` au lieu de `1:02.92`
 - Encodage: UTF-8 avec BOM pour compatibilité Excel
 - Les caractères accentués (é, è, à, etc.) sont correctement encodés
+- **Nouvelle colonne "Temps (secondes)"**: Conversion automatique des temps
+  - `36,12` → `36,12` (déjà en secondes)
+  - `1:02,92` → `62,92` (1 min * 60 + 2,92 sec)
 
 ## Conventions de codage
 

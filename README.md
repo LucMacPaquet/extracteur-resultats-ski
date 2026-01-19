@@ -24,7 +24,8 @@ Le script extrait les informations suivantes pour chaque course:
 - **Nom**: Nom du compétiteur
 - **Année**: Année de naissance
 - **Club**: Club d'appartenance
-- **Temps**: Temps réalisé (format avec virgule: 36,16 ou 1:02,92)
+- **Temps**: Temps réalisé (format original: 36,16 ou 1:02,92)
+- **Temps (secondes)**: Temps converti en secondes (36,16 ou 62,92)
 - **Écart**: Écart avec le premier (format avec virgule)
 
 ## Installation
@@ -144,12 +145,13 @@ Le fichier CSV généré utilise:
 ### Exemple de contenu
 
 ```csv
-Date;Lieu;Type de compétition;Rang;Dossard;Nom;Année;Club;Temps;Écart
-Dimanche 1/18/2026;STONEHAM;GRANDS CIRCUITS SLALOM 1 - SLALOM FÉMININ;1;38;Léa, Doyon;2014;REL;37,58;0,00
-Dimanche 1/18/2026;STONEHAM;GRANDS CIRCUITS SLALOM 1 - SLALOM FÉMININ;2;15;Mélya, Ménard;2015;REL;40,07;2,49
+Date;Lieu;Type de compétition;Rang;Dossard;Nom;Année;Club;Temps;Temps (secondes);Écart
+Dimanche 1/18/2026;STONEHAM;GRANDS CIRCUITS SLALOM 1 - SLALOM FÉMININ;1;38;Léa, Doyon;2014;REL;37,58;37,58;0,00
+Dimanche 1/18/2026;STONEHAM;GRANDS CIRCUITS SLALOM 1 - SLALOM FÉMININ;2;15;Mélya, Ménard;2015;REL;40,07;40,07;2,49
+Dimanche 1/18/2026;STONEHAM;GRANDS CIRCUITS SLALOM 1 - SLALOM FÉMININ;48;12;Alice, Pronovost;2015;MASS;1:02,92;62,92;25,34
 ```
 
-**Colonnes (10 au total):**
+**Colonnes (11 au total):**
 1. Date
 2. Lieu
 3. Type de compétition
@@ -158,8 +160,18 @@ Dimanche 1/18/2026;STONEHAM;GRANDS CIRCUITS SLALOM 1 - SLALOM FÉMININ;2;15;Mél
 6. Nom
 7. Année
 8. Club
-9. Temps
-10. Écart
+9. Temps (format original MM:SS,cc ou SS,cc)
+10. Temps (secondes) - **Nouvelle colonne!**
+11. Écart
+
+### Conversion automatique des temps
+
+La colonne "Temps (secondes)" convertit automatiquement tous les temps en secondes:
+- `36,12` secondes → `36,12` (déjà en secondes)
+- `1:02,30` (1 minute 2,30 sec) → `62,30` secondes
+- `1:23,45` (1 minute 23,45 sec) → `83,45` secondes
+
+Cela facilite les calculs et analyses dans Excel ou autres outils.
 
 ## Ouverture du fichier CSV
 
