@@ -99,6 +99,9 @@ Le script est organisé en fonctions modulaires:
   - Formule: `(1 - écart/temps) × 100`
   - Retourne float ou None
   - Exemples: 0 sec d'écart = 100%, 2,49 sec sur 40,07 sec = 93,79%
+  - Raison d'être: Normalise la performance pour comparaison entre compétitions
+    - Les écarts de temps varient selon les conditions
+    - Le pourcentage permet de suivre la progression réelle d'un athlète
 
 #### Fonctions de traitement
 - `traiter_pdf(chemin_pdf)` : Traite un fichier PDF complet
@@ -162,6 +165,10 @@ Date;Lieu;Type de compétition;Rang;Dossard;Nom;Année;Club;Temps;Temps (seconde
 - **Colonne "Note"**: Calcul automatique du pourcentage de performance
   - Formule: `(1 - écart/temps) × 100`
   - Exemple: temps=40,07 sec, écart=2,49 sec → note=93,79%
+  - **Utilité**: Permet de comparer les performances entre différentes compétitions
+    - Les temps absolus changent selon les conditions (météo, tracé, piste)
+    - Le pourcentage normalise la performance indépendamment des conditions
+    - Permet de suivre l'amélioration réelle d'un athlète d'une course à l'autre
 
 ## Conventions de codage
 

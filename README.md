@@ -184,7 +184,19 @@ La colonne "Note" calcule le pourcentage de performance par rapport au meilleur 
 - Temps: 40,07 sec, Écart: 2,49 sec → Note: **93,79%**
 - Temps: 62,92 sec, Écart: 25,34 sec → Note: **59,73%**
 
-Cette note permet de comparer facilement les performances entre les participants.
+#### Pourquoi utiliser une note en pourcentage?
+
+La note en pourcentage permet de **comparer les performances entre différentes compétitions**, ce que l'écart de temps seul ne permet pas. Les temps de compétition changent toujours selon:
+- Les conditions météo (neige, température)
+- La difficulté du tracé
+- Le nombre de portes
+- L'état de la piste
+
+**Exemple concret:**
+- **Course 1**: Un athlète a un écart de 3,5 secondes sur un temps de 45 sec → **92,22%**
+- **Course 2**: Le même athlète a un écart de 2,8 secondes sur un temps de 35 sec → **92,00%**
+
+Même si l'écart absolu a diminué (3,5 → 2,8 sec), la note révèle une performance légèrement moins bonne. Le pourcentage permet de **voir la vraie amélioration d'une compétition à l'autre**, indépendamment des conditions de course.
 
 ## Ouverture du fichier CSV
 
