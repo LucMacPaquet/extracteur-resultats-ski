@@ -2,6 +2,19 @@
 
 Ce projet contient un script Python pour extraire automatiquement les résultats de courses de ski depuis des fichiers PDF et les exporter en format CSV.
 
+---
+
+## 👋 Nouveau dans le monde de la programmation?
+
+**Si vous n'êtes pas familier avec GitHub, Python ou les outils informatiques**, consultez d'abord notre [**Guide pour débutants**](GUIDE_DEBUTANT.md)! Ce guide vous explique pas à pas comment:
+- Installer Python sur votre ordinateur
+- Télécharger et utiliser ce projet
+- Résoudre les problèmes courants
+
+📖 **[Cliquez ici pour accéder au Guide pour débutants](GUIDE_DEBUTANT.md)**
+
+---
+
 ## Fonctionnalités
 
 - 📄 Extraction automatique des données depuis des PDFs de résultats de courses
