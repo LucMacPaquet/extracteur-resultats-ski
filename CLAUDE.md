@@ -95,13 +95,15 @@ Le script est organisé en fonctions modulaires:
   - Gère formats: `SS,cc` et `MM:SS,cc`
   - Retourne float ou None
 
-- `calculer_note(temps_secondes, ecart_secondes)` : Calcule la note en %
+- `calculer_note(temps_secondes, ecart_secondes)` : Calcule la note (valeur numérique de pourcentage)
   - Formule: `(1 - écart/temps) × 100`
   - Retourne float ou None
-  - Exemples: 0 sec d'écart = 100%, 2,49 sec sur 40,07 sec = 93,79%
+  - Exemples: 0 sec d'écart = 100,00 (100%), 2,49 sec sur 40,07 sec = 93,79 (93,79%)
+  - Format CSV: Valeur numérique sans symbole % (ex: `93,79` au lieu de `93,79%`)
   - Raison d'être: Normalise la performance pour comparaison entre compétitions
     - Les écarts de temps varient selon les conditions
     - Le pourcentage permet de suivre la progression réelle d'un athlète
+    - Format numérique facilite les calculs dans Excel
 
 #### Fonctions de traitement
 - `traiter_pdf(chemin_pdf)` : Traite un fichier PDF complet
@@ -162,9 +164,10 @@ Date;Lieu;Type de compétition;Rang;Dossard;Nom;Année;Club;Temps;Temps (seconde
 - **Colonne "Temps (secondes)"**: Conversion automatique des temps
   - `36,12` → `36,12` (déjà en secondes)
   - `1:02,92` → `62,92` (1 min * 60 + 2,92 sec)
-- **Colonne "Note"**: Calcul automatique du pourcentage de performance
+- **Colonne "Note"**: Calcul automatique du pourcentage de performance (valeur numérique)
   - Formule: `(1 - écart/temps) × 100`
-  - Exemple: temps=40,07 sec, écart=2,49 sec → note=93,79%
+  - Exemple: temps=40,07 sec, écart=2,49 sec → note=93,79 (93,79%)
+  - Format: Valeur numérique sans symbole % pour faciliter les calculs Excel
   - **Utilité**: Permet de comparer les performances entre différentes compétitions
     - Les temps absolus changent selon les conditions (météo, tracé, piste)
     - Le pourcentage normalise la performance indépendamment des conditions

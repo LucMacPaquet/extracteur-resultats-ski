@@ -73,7 +73,7 @@ Le script extrait les informations suivantes pour chaque course:
 - **Temps**: Temps réalisé (format original: 36,16 ou 1:02,92)
 - **Temps (secondes)**: Temps converti en secondes (36,16 ou 62,92)
 - **Écart**: Écart avec le premier (format avec virgule)
-- **Note**: Pourcentage calculé avec la formule: (1 - écart/temps) × 100
+- **Note**: Valeur numérique de performance calculée avec la formule: (1 - écart/temps) × 100 (ex: 93,79 pour 93,79%)
 
 ## Installation
 
@@ -301,9 +301,9 @@ Le fichier CSV généré est optimisé pour une ouverture directe dans Excel ave
 
 ```csv
 Date;Lieu;Type de compétition;Rang;Dossard;Nom;Année;Club;Temps;Temps (secondes);Écart;Note
-Dimanche 1/18/2026;STONEHAM;GRANDS CIRCUITS SLALOM 1 - SLALOM FÉMININ;1;38;Léa, Doyon;2014;REL;37,58;37,58;0,00;100,00%
-Dimanche 1/18/2026;STONEHAM;GRANDS CIRCUITS SLALOM 1 - SLALOM FÉMININ;2;15;Mélya, Ménard;2015;REL;40,07;40,07;2,49;93,79%
-Dimanche 1/18/2026;STONEHAM;GRANDS CIRCUITS SLALOM 1 - SLALOM FÉMININ;48;12;Alice, Pronovost;2015;MASS;1:02,92;62,92;25,34;59,73%
+Dimanche 1/18/2026;STONEHAM;GRANDS CIRCUITS SLALOM 1 - SLALOM FÉMININ;1;38;Léa, Doyon;2014;REL;37,58;37,58;0,00;100,00
+Dimanche 1/18/2026;STONEHAM;GRANDS CIRCUITS SLALOM 1 - SLALOM FÉMININ;2;15;Mélya, Ménard;2015;REL;40,07;40,07;2,49;93,79
+Dimanche 1/18/2026;STONEHAM;GRANDS CIRCUITS SLALOM 1 - SLALOM FÉMININ;48;12;Alice, Pronovost;2015;MASS;1:02,92;62,92;25,34;59,73
 ```
 
 ### Description détaillée des colonnes
@@ -323,7 +323,7 @@ Le fichier CSV généré contient **12 colonnes** pour faciliter l'analyse dans 
 | 9 | **Temps** | Texte | Temps original tel qu'affiché dans le PDF LiveTiming | `37,58` ou `1:02,92` |
 | 10 | **Temps (secondes)** | Nombre | Temps converti en secondes décimales pour calculs Excel | `37,58` ou `62,92` |
 | 11 | **Écart** | Nombre | Écart de temps avec le premier (en secondes) | `0,00`, `2,49`, `25,34` |
-| 12 | **Note** | Pourcentage | Performance relative calculée: (1 - écart/temps) × 100 | `100,00%`, `93,79%`, `59,73%` |
+| 12 | **Note** | Nombre | Performance relative en pourcentage: (1 - écart/temps) × 100 | `100,00`, `93,79`, `59,73` |
 
 ### Utilisation des colonnes dans Excel
 
@@ -370,9 +370,11 @@ La colonne "Note" calcule le pourcentage de performance par rapport au meilleur 
 **Formule:** `Note = (1 - écart/temps) × 100`
 
 **Exemples:**
-- Temps: 37,58 sec, Écart: 0,00 sec → Note: **100,00%** (premier)
-- Temps: 40,07 sec, Écart: 2,49 sec → Note: **93,79%**
-- Temps: 62,92 sec, Écart: 25,34 sec → Note: **59,73%**
+- Temps: 37,58 sec, Écart: 0,00 sec → Note: **100,00** (premier, 100%)
+- Temps: 40,07 sec, Écart: 2,49 sec → Note: **93,79** (93,79%)
+- Temps: 62,92 sec, Écart: 25,34 sec → Note: **59,73** (59,73%)
+
+**Note:** La valeur est stockée comme nombre décimal (ex: `93,79`) pour faciliter les calculs dans Excel. Vous pouvez formater la colonne en pourcentage dans Excel si vous le souhaitez.
 
 #### Pourquoi utiliser une note en pourcentage?
 
@@ -383,8 +385,8 @@ La note en pourcentage permet de **comparer les performances entre différentes 
 - L'état de la piste
 
 **Exemple concret:**
-- **Course 1**: Un athlète a un écart de 3,5 secondes sur un temps de 45 sec → **92,22%**
-- **Course 2**: Le même athlète a un écart de 2,8 secondes sur un temps de 35 sec → **92,00%**
+- **Course 1**: Un athlète a un écart de 3,5 secondes sur un temps de 45 sec → Note: **92,22**
+- **Course 2**: Le même athlète a un écart de 2,8 secondes sur un temps de 35 sec → Note: **92,00**
 
 Même si l'écart absolu a diminué (3,5 → 2,8 sec), la note révèle une performance légèrement moins bonne. Le pourcentage permet de **voir la vraie amélioration d'une compétition à l'autre**, indépendamment des conditions de course.
 

@@ -257,9 +257,9 @@ def generer_csv(donnees_course, fichier_sortie):
                 # Calculer la note
                 note = calculer_note(temps_secondes, ecart_secondes)
 
-                # Formater note avec virgule et symbole %
+                # Formater note avec virgule (valeur numérique seulement)
                 if note is not None:
-                    note_str = f"{note:.2f}".replace('.', ',') + "%"
+                    note_str = f"{note:.2f}".replace('.', ',')
                 else:
                     note_str = ""
 
